@@ -641,7 +641,6 @@ export default function Sidebar() {
           open={renameModal.open}
           nodeId={renameModal.nodeId}
           initialName={renameModal.initialName}
-          initialDescription={renameModal.initialDescription}
           onClose={() => setRenameModal({ open: false, nodeId: '', initialName: '' })}
           onConfirm={handleRenameNode}
         />

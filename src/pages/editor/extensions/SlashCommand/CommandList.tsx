@@ -4,20 +4,6 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from 'react'
-import {
-  Heading1,
-  Heading2,
-  Heading3,
-  Text,
-  List,
-  ListOrdered,
-  CheckSquare,
-  Quote,
-  Code,
-  Image as ImageIcon,
-  Activity,
-  Box,
-} from 'lucide-react'
 
 export interface CommandItem {
   title: string
