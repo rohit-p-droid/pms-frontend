@@ -3,6 +3,7 @@ import { config } from '../config';
 import type { AxiosInstance } from 'axios';
 import type { ApiResponse, AuthResponse } from '../types';
 import type { LoginPayload, RegisterPayload } from '../schemas/auth.schema';
+import { store } from '../store/store';
 
 const API_BASE_URL = config.API_URL;
 
@@ -19,7 +20,7 @@ class ApiClient {
 
         // Add token to requests
         this.client.interceptors.request.use((config) => {
-            const token = localStorage.getItem('access_token')
+            const token = store.getState().auth.token
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`
             }
@@ -31,9 +32,11 @@ class ApiClient {
             (response) => response,
             (error) => {
                 if (error.response?.status === 401) {
-                    localStorage.removeItem('access_token')
-                    localStorage.removeItem('user')
-                    window.location.href = '/login'
+                    if (window.location.pathname !== '/login') {
+                        localStorage.removeItem('access_token')
+                        localStorage.removeItem('user')
+                        window.location.href = '/login'
+                    }
                 }
                 return Promise.reject(error)
             }

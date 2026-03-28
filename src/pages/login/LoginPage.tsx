@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { loginSchema, type LoginPayload } from '../schemas/auth.schema'
-import { authService } from '../services'
-import { useAppDispatch, useAuthLoading, useAuthError } from '../hooks/useRedux'
-import { setAuth, setLoading, setError } from '../store/slices/authSlice'
-import { useTheme } from '../hooks/useTheme'
-import { Card, CardHeader, CardContent, TextInput, Button } from '../components'
+import { loginSchema, type LoginPayload } from '../../schemas/auth.schema'
+import { authService } from '../../services'
+import { useAppDispatch, useAuthLoading, useAuthError } from '../../hooks/useRedux'
+import { setAuth, setLoading, setError } from '../../store/slices/authSlice'
+import { useTheme } from '../../hooks/useTheme'
+import { Card, CardHeader, CardContent, TextInput, Button } from '../../components'
 import { MdLightbulb, MdDarkMode, MdBolt } from 'react-icons/md'
 import { ZodError } from 'zod'
 
@@ -22,20 +22,21 @@ export function LoginPage() {
     })
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
         setFormData((prev) => ({ ...prev, [name]: value }))
         // Clear field error when user starts typing
-        if (fieldErrors[name]) {
-            setFieldErrors((prev) => {
+        setFieldErrors((prev) => {
+            if (prev[name]) {
                 const next = { ...prev }
                 delete next[name]
                 return next
-            })
-        }
-    }
+            }
+            return prev
+        })
+    }, [])
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = useCallback(async (e: React.FormEvent) => {
         e.preventDefault()
         setFieldErrors({})
         dispatch(setError(null))
@@ -46,9 +47,10 @@ export function LoginPage() {
 
             dispatch(setLoading(true))
             const response = await authService.login(validated)
+
             dispatch(setAuth(response))
-            navigate('/dashboard')
-        } catch (err) {
+            navigate('/app')
+        } catch (err: any) {
             if (err instanceof ZodError) {
                 const errors: Record<string, string> = {}
                 err.issues.forEach((issue) => {
@@ -56,6 +58,8 @@ export function LoginPage() {
                     errors[field] = issue.message
                 })
                 setFieldErrors(errors)
+            } else if (err?.response?.status === 401 || err?.status === 401 || err?.message?.toLowerCase().includes('401') || err?.message?.toLowerCase().includes('credential') || err?.message?.toLowerCase().includes('unauthorized')) {
+                dispatch(setError('Invalid email or password'))
             } else if (err instanceof Error) {
                 dispatch(setError(err.message))
             } else {
@@ -64,7 +68,7 @@ export function LoginPage() {
         } finally {
             dispatch(setLoading(false))
         }
-    }
+    }, [formData, dispatch, navigate])
 
     return (
         <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center px-4 sm:px-6 lg:px-8">
@@ -82,35 +86,35 @@ export function LoginPage() {
             </button>
 
             {/* Main container */}
-            <div className="w-full max-w-md">
-                <Card>
+            <div className="w-full max-w-2xl animate-fade-in">
+                <Card className="shadow-2xl border-0 overflow-hidden">
                     {/* Header */}
-                    <CardHeader>
-                        <div className="flex justify-center mb-4">
-                            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                                <MdBolt className="w-7 h-7 text-white" />
+                    <CardHeader className="bg-gradient-to-br from-primary-600 to-primary-700 dark:from-primary-700 dark:to-primary-800 pt-6 pb-6">
+                        <div className="flex justify-center mb-2">
+                            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/30 shadow-lg hover:shadow-xl transition-shadow">
+                                <MdBolt className="w-6 h-6 text-white" />
                             </div>
                         </div>
-                        <h1 className="text-3xl font-bold text-white text-center mb-2">Developer OS</h1>
-                        <p className="text-primary-100 text-center text-sm">Your Personal Productivity Hub</p>
+                        <h1 className="text-2xl font-extrabold text-white text-center tracking-tight mb-0.5">Developer OS</h1>
+                        <p className="text-primary-100/90 text-center text-xs font-medium">Your Personal Productivity Hub</p>
                     </CardHeader>
 
                     {/* Content */}
-                    <CardContent>
-                        <div className="mb-8">
-                            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Welcome back</h2>
-                            <p className="text-slate-600 dark:text-slate-400 text-sm">Sign in to your account to continue</p>
+                    <CardContent className="pt-6 px-8 pb-6 bg-white dark:bg-slate-800">
+                        <div className="mb-6">
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">Welcome back</h2>
+                            <p className="text-slate-500 dark:text-slate-400 text-xs">Sign in to your account to continue</p>
                         </div>
 
                         {/* Error message */}
                         {error && (
                             <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900 rounded-lg animate-slide-up">
-                                <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+                                <p className="text-sm text-red-800 dark:text-red-200 font-medium">{error}</p>
                             </div>
                         )}
 
                         {/* Form */}
-                        <form onSubmit={handleSubmit} className="space-y-5">
+                        <form onSubmit={handleSubmit} className="space-y-3">
                             {/* Email field */}
                             <TextInput
                                 id="email"
@@ -127,16 +131,10 @@ export function LoginPage() {
 
                             {/* Password field */}
                             <div>
-                                <div className="flex items-center justify-between mb-2">
-                                    <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                <div className="mb-2">
+                                    <label htmlFor="password" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
                                         Password
                                     </label>
-                                    <Link
-                                        to="/forgot-password"
-                                        className="text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
-                                    >
-                                        Forgot?
-                                    </Link>
                                 </div>
                                 <TextInput
                                     id="password"
@@ -151,19 +149,7 @@ export function LoginPage() {
                                 />
                             </div>
 
-                            {/* Remember me checkbox */}
-                            <div className="flex items-center">
-                                <input
-                                    id="remember"
-                                    name="remember"
-                                    type="checkbox"
-                                    className="w-4 h-4 text-primary-600 bg-slate-100 border-slate-300 rounded dark:bg-slate-700 dark:border-slate-600 dark:checked:bg-primary-600"
-                                    disabled={isLoading}
-                                />
-                                <label htmlFor="remember" className="ml-2 text-sm text-slate-600 dark:text-slate-400">
-                                    Remember me
-                                </label>
-                            </div>
+
 
                             {/* Submit button */}
                             <Button
@@ -177,39 +163,21 @@ export function LoginPage() {
                             </Button>
                         </form>
 
-                        {/* Divider */}
-                        <div className="mt-6 relative">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-slate-300 dark:border-slate-600"></div>
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400">New to Developer OS?</span>
-                            </div>
-                        </div>
 
-                        {/* Sign up link */}
-                        <div className="mt-6">
-                            <Link
-                                to="/register"
-                                className="block w-full text-center px-4 py-2.5 border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
-                            >
-                                Create account
-                            </Link>
-                        </div>
                     </CardContent>
                 </Card>
 
                 {/* Footer */}
-                <div className="mt-8 text-center">
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                <div className="mt-6 text-center">
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
                         By signing in, you agree to our{' '}
-                        <a href="#" className="text-primary-600 dark:text-primary-400 hover:underline">
+                        <Link to="/terms" className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline font-medium transition-colors">
                             Terms of Service
-                        </a>
+                        </Link>
                         {' '}and{' '}
-                        <a href="#" className="text-primary-600 dark:text-primary-400 hover:underline">
+                        <Link to="/privacy" className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline font-medium transition-colors">
                             Privacy Policy
-                        </a>
+                        </Link>
                     </p>
                 </div>
             </div>

@@ -1,16 +1,62 @@
 import type { RouteObject } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
+import ProtectedRoute from '../components/ProtectedRoute'
+import AppLayout from '../layouts/AppLayout'
+import DashboardPage from '../pages/dashboard/DashboardPage'
+import DocumentEditorPage from '../pages/editor/DocumentEditorPage'
+import WorkspaceListPage from '../pages/workspace/WorkspaceListPage'
+import ComingSoonPage from '../pages/coming-soon/ComingSoonPage'
 
 export const appRoutes: RouteObject[] = [
   {
-    path: 'dashboard',
-    element: <div className="text-center p-10">Dashboard - Coming Soon</div>,
-  },
-  {
-    path: 'profile',
-    element: <div className="text-center p-10">Profile - Coming Soon</div>,
-  },
-  {
-    path: 'settings',
-    element: <div className="text-center p-10">Settings - Coming Soon</div>,
+    path: '/',
+    element: (
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: <Navigate to="/dashboard" replace />,
+      },
+      {
+        path: 'dashboard',
+        element: <DashboardPage />,
+      },
+      {
+        path: 'workspace',
+        children: [
+          {
+            index: true,
+            element: <WorkspaceListPage />,
+          },
+          {
+            path: ':workspaceId',
+            element: <DocumentEditorPage />,
+          },
+        ]
+      },
+      {
+        path: 'cloud-storage',
+        element: <ComingSoonPage title="Cloud Storage" />,
+      },
+      {
+        path: 'password-manager',
+        element: <ComingSoonPage title="Password Manager" />,
+      },
+      {
+        path: 'connections',
+        element: <ComingSoonPage title="Connections" />,
+      },
+      {
+        path: 'other',
+        element: <ComingSoonPage title="Other Features" />,
+      },
+      {
+        path: 'app',
+        element: <Navigate to="/dashboard" replace />,
+      },
+    ],
   },
 ]

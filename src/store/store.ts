@@ -1,4 +1,5 @@
 import authReducer from './slices/authSlice';
+import docsReducer from './slices/docsSlice';
 import { configureStore } from '@reduxjs/toolkit';
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
 
@@ -22,6 +23,7 @@ const persistedAuthReducer = persistReducer(persistConfig, authReducer)
 export const store = configureStore({
     reducer: {
         auth: persistedAuthReducer,
+        docs: docsReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

@@ -100,3 +100,122 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* ── TipTap Editor ─────────────────────────────────────────────────────────── */
+
+.ProseMirror {
+  outline: none;
+}
+
+.ProseMirror > * + * {
+  margin-top: 0.75em;
+}
+
+/* Code blocks */
+.ProseMirror pre {
+  background: #1e1e2e;
+  border-radius: 6px;
+  color: #cdd6f4;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+}
+
+.ProseMirror pre code {
+  background: none;
+  color: inherit;
+  font-size: inherit;
+  padding: 0;
+}
+
+/* Inline code */
+.ProseMirror code {
+  background: rgba(100, 116, 139, 0.12);
+  border-radius: 3px;
+  font-size: 0.9em;
+  padding: 2px 5px;
+}
+
+/* Blockquote */
+.ProseMirror blockquote {
+  border-left: 3px solid #cbd5e1;
+  margin-left: 0;
+  padding-left: 1rem;
+  color: #64748b;
+}
+
+/* Tables */
+.ProseMirror table {
+  border-collapse: collapse;
+  margin: 0;
+  overflow: hidden;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.ProseMirror td,
+.ProseMirror th {
+  border: 1px solid #e2e8f0;
+  box-sizing: border-box;
+  min-width: 1em;
+  padding: 4px 8px;
+  position: relative;
+  vertical-align: top;
+}
+
+.dark .ProseMirror td,
+.dark .ProseMirror th {
+  border-color: #374151;
+}
+
+.ProseMirror th {
+  background-color: #f8fafc;
+  font-weight: 600;
+}
+
+.dark .ProseMirror th {
+  background-color: #1f2937;
+}
+
+/* Horizontal rule */
+.ProseMirror hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 1.5rem 0;
+}
+
+.dark .ProseMirror hr {
+  border-color: #374151;
+}
+
+/* Syntax highlighting (lowlight) */
+.hljs-comment,
+.hljs-quote {
+  color: #6b7280;
+  font-style: italic;
+}
+.hljs-keyword,
+.hljs-selector-tag {
+  color: #c084fc;
+}
+.hljs-string,
+.hljs-attr {
+  color: #86efac;
+}
+.hljs-number,
+.hljs-literal {
+  color: #fdba74;
+}
+.hljs-built_in,
+.hljs-type {
+  color: #7dd3fc;
+}
+.hljs-function,
+.hljs-title {
+  color: #fde68a;
+}
+.hljs-variable,
+.hljs-name {
+  color: #f9fafb;
+}
