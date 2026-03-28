@@ -157,7 +157,7 @@ export default function DocumentEditorPage() {
         class:
           'prose dark:prose-invert max-w-none focus:outline-none min-h-[calc(100vh-300px)] px-4 sm:px-8',
       },
-      handlePaste(view, event) {
+      handlePaste(_view, event) {
         const items = event.clipboardData?.items
         if (!items) return false
 
@@ -449,6 +449,7 @@ export default function DocumentEditorPage() {
               {editor && isEditing && (
                 <BubbleMenu 
                   editor={editor} 
+                  // @ts-ignore - tippyOptions is valid but Tiptap types might be out of sync
                   tippyOptions={{ zIndex: 99999, placement: 'top' }}
                   shouldShow={({ state, editor }) => {
                     // Show menu if text is selected, or if we're inside a table

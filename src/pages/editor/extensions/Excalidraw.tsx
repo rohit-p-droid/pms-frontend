@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState, useEffect } from 'react'
+import { useCallback, useRef, useState, useEffect } from 'react'
 import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
 import { Node, mergeAttributes } from '@tiptap/core'
 import type { NodeViewProps } from '@tiptap/core'
@@ -8,9 +8,7 @@ import type { NodeViewProps } from '@tiptap/core'
  * and requires browser APIs, so this avoids SSR issues (if next.js was used)
  * and speeds up initial editor load.
  */
-import { Excalidraw, exportToSvg, getSceneVersion } from '@excalidraw/excalidraw'
-import type { ExcalidrawElement } from '@excalidraw/excalidraw'
-import type { AppState, BinaryFiles } from '@excalidraw/excalidraw'
+import { Excalidraw, exportToSvg } from '@excalidraw/excalidraw'
 
 const ExcalidrawComponent = (props: NodeViewProps) => {
   const [isEditing, setIsEditing] = useState(false)
@@ -51,7 +49,7 @@ const ExcalidrawComponent = (props: NodeViewProps) => {
   }, [elements, appState, files])
 
   const onChange = useCallback(
-    (newElements: readonly ExcalidrawElement[], newAppState: AppState, newFiles: BinaryFiles) => {
+    (_newElements: any, _newAppState: any, _newFiles: any) => {
       // Excalidraw frequently fires onChange, so it's a good idea to conditionally update
       // But Tiptap relies on its update pipeline, we might debounce or just let it update on close.
     },
