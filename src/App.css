@@ -182,3 +182,56 @@
     border-right-color: var(--border);
   }
 }
+
+/* Editor Custom Styles */
+.ProseMirror {
+  /* Task list checkbox styling - smaller and better aligned */
+  ul[data-type="taskList"] li input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    margin-top: 2px;
+    cursor: pointer;
+    flex-shrink: 0;
+    vertical-align: middle;
+  }
+
+  ul[data-type="taskList"] li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  /* Bullet list styling - darker and multiple styles */
+  ul {
+    list-style-type: disc;
+    color: #1f2937;
+  }
+
+  .dark & ul {
+    color: #d1d5db;
+  }
+
+  /* Second level bullets as circles */
+  ul ul {
+    list-style-type: circle;
+  }
+
+  /* Third level bullets as squares */
+  ul ul ul {
+    list-style-type: square;
+  }
+
+  /* Line height support */
+  p[style*="line-height"] {
+    line-height: var(--line-height, 1.5);
+  }
+
+  /* Text alignment support */
+  p[style*="text-align"],
+  h1[style*="text-align"],
+  h2[style*="text-align"],
+  h3[style*="text-align"] {
+    text-align: inherit;
+  }
+}

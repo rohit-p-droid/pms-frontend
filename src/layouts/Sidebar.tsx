@@ -42,6 +42,7 @@ import CreateNodeModal from './CreateNodeModal'
 import RenameNodeModal from './RenameNodeModal'
 import EntityDetailsModal from './EntityDetailsModal'
 import ConfirmModal from './ConfirmModal'
+import { config } from '../config'
 
 // ── TreeItem ─────────────────────────────────────────────────────────────────
 
@@ -104,7 +105,7 @@ function TreeItem({
     const rect = e.currentTarget.getBoundingClientRect()
     const y = e.clientY - rect.top
     const height = rect.height
-    
+
     let pos: 'BEFORE' | 'AFTER' | 'INSIDE'
     const isFolder = node.type === 'FOLDER'
 
@@ -129,18 +130,18 @@ function TreeItem({
     e.stopPropagation()
     const pos = dragOverPos
     setDragOverPos(null)
-    
+
     try {
       const data = JSON.parse(e.dataTransfer.getData('application/json'))
       const draggedId = data.nodeId
       const draggedType = data.type
       if (!draggedId || draggedId === node.id) return
-      
+
       let newParentId = node.parentId || null
       if (pos === 'INSIDE') {
         newParentId = node.id
       }
-      
+
       // Enforce: Documents cannot be placed at the absolute root directly, they need a Space
       if (!newParentId && draggedType === 'DOCUMENT') {
         onDragError("Pages must be placed inside a Space.")
@@ -163,13 +164,12 @@ function TreeItem({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`group relative flex items-center justify-between py-2 pr-3 mx-2 my-[2px] cursor-pointer text-sm transition-all rounded-md ${
-          dragOverPos === 'INSIDE' 
-            ? 'bg-indigo-500/20 shadow-inner text-white' 
+        className={`group relative flex items-center justify-between py-2 pr-3 mx-2 my-[2px] cursor-pointer text-sm transition-all rounded-md ${dragOverPos === 'INSIDE'
+            ? 'bg-indigo-500/20 shadow-inner text-white'
             : isActive
               ? 'bg-indigo-500/15 text-indigo-100 font-semibold shadow-sm'
               : 'text-gray-300 hover:bg-white/5 hover:text-white'
-        }`}
+          }`}
         style={{ paddingLeft: `${8 + depth * 12}px` }}
         onClick={handleClick}
         onMouseLeave={() => setMenuOpen(false)}
@@ -204,11 +204,10 @@ function TreeItem({
 
         <span className="hidden group-hover:flex items-center shrink-0">
           <button
-            className={`p-1 rounded transition-colors ${
-              isActive
+            className={`p-1 rounded transition-colors ${isActive
                 ? 'text-white hover:bg-white/20'
                 : 'text-[#c2c7d0] hover:bg-white/20 hover:text-white'
-            }`}
+              }`}
             title="Options"
             onClick={(e) => {
               e.stopPropagation()
@@ -220,7 +219,7 @@ function TreeItem({
         </span>
 
         {menuOpen && (
-          <div 
+          <div
             className="absolute right-4 top-full mt-[-4px] w-40 bg-white border border-gray-200 shadow-xl rounded py-1 z-50 flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
@@ -327,14 +326,14 @@ function TreeItem({
 export default function Sidebar() {
   const navigate = useNavigate()
   const location = useLocation()
-  
+
   const isDashboard = location.pathname.startsWith('/dashboard')
   const isWorkspaceList = location.pathname === '/workspace'
   const isCloudStorage = location.pathname.startsWith('/cloud-storage')
   const isPasswordManager = location.pathname.startsWith('/password-manager')
   const isConnections = location.pathname.startsWith('/connections')
   const isOther = location.pathname.startsWith('/other')
-  
+
   // Workspace Context Mode Check (Jiri-style contextual sidebar)
   const isWorkspaceContext = location.pathname.startsWith('/workspace/') && location.pathname !== '/workspace'
 
@@ -375,7 +374,7 @@ export default function Sidebar() {
 
   // Ensure routing URL /workspace/:workspaceId matches Redux activeWorkspaceId
   const urlWorkspaceId = isWorkspaceContext ? location.pathname.replace('/workspace/', '').split('/')[0] : null
-  
+
   useEffect(() => {
     if (urlWorkspaceId && activeWorkspaceId !== urlWorkspaceId) {
       dispatch(setActiveWorkspace(urlWorkspaceId))
@@ -405,7 +404,7 @@ export default function Sidebar() {
       .finally(() => {
         dispatch(setTreeLoading(false))
       })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeWorkspaceId])
 
   // Open Document
@@ -441,7 +440,7 @@ export default function Sidebar() {
         if (activeWorkspaceId) {
           getWorkspaceTree(activeWorkspaceId)
             .then((refreshed) => dispatch(setTree(refreshed)))
-            .catch(() => {})
+            .catch(() => { })
         }
       })
     },
@@ -631,6 +630,7 @@ export default function Sidebar() {
         <CreateNodeModal
           open={createModal.open}
           fixedType={createModal.fixedType}
+          title={createModal.parentNode === null && createModal.fixedType === 'FOLDER' ? 'Create space' : undefined}
           parentName={createModal.parentNode?.name ?? activeWorkspace?.name ?? 'Root'}
           onClose={() => setCreateModal({ open: false, parentNode: null })}
           onConfirm={handleCreateNode}
@@ -675,9 +675,9 @@ export default function Sidebar() {
       <div className="h-[56px] flex items-center px-6 border-b border-[#2b3035] shrink-0 bg-gradient-to-r from-indigo-500/20 to-transparent">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-             <LayoutDashboard className="w-4 h-4 text-white" />
+            <LayoutDashboard className="w-4 h-4 text-white" />
           </div>
-          <span className="text-lg font-bold text-white tracking-wide truncate">Nexus Docs</span>
+          <span className="text-lg font-bold text-white tracking-wide truncate">{config.APP_NAME}</span>
         </div>
       </div>
 
@@ -703,22 +703,20 @@ export default function Sidebar() {
         </div>
         <button
           onClick={() => navigate('/dashboard')}
-          className={`flex items-center gap-3 text-left text-[14px] px-3 py-2.5 rounded-lg transition-all border ${
-            isDashboard
+          className={`flex items-center gap-3 text-left text-[14px] px-3 py-2.5 rounded-lg transition-all border ${isDashboard
               ? 'bg-indigo-500/15 text-indigo-400 font-medium shadow-inner border-indigo-500/20'
               : 'hover:bg-white/5 hover:text-white text-gray-400 font-medium border-transparent'
-          }`}
+            }`}
         >
           <LayoutDashboard className={`w-5 h-5 ${isDashboard ? 'text-indigo-400' : 'text-purple-400/80'}`} />
           Dashboard
         </button>
         <button
           onClick={() => navigate('/workspace')}
-          className={`flex items-center gap-3 text-left text-[14px] px-3 py-2.5 rounded-lg transition-all border ${
-            isWorkspaceList
+          className={`flex items-center gap-3 text-left text-[14px] px-3 py-2.5 rounded-lg transition-all border ${isWorkspaceList
               ? 'bg-indigo-500/15 text-indigo-400 font-medium shadow-inner border-indigo-500/20'
               : 'hover:bg-white/5 hover:text-white text-gray-400 font-medium border-transparent'
-          }`}
+            }`}
         >
           <Briefcase className={`w-5 h-5 ${isWorkspaceList ? 'text-indigo-400' : 'text-indigo-400/80'}`} />
           Workspaces
@@ -729,44 +727,40 @@ export default function Sidebar() {
         </div>
         <button
           onClick={() => navigate('/cloud-storage')}
-          className={`flex items-center gap-3 text-left text-[14px] px-3 py-2.5 rounded-lg transition-all border ${
-            isCloudStorage
+          className={`flex items-center gap-3 text-left text-[14px] px-3 py-2.5 rounded-lg transition-all border ${isCloudStorage
               ? 'bg-indigo-500/15 text-indigo-400 font-medium shadow-inner border-indigo-500/20'
               : 'hover:bg-white/5 hover:text-white text-gray-400 font-medium border-transparent'
-          }`}
+            }`}
         >
           <Cloud className={`w-5 h-5 ${isCloudStorage ? 'text-indigo-400' : 'text-sky-400/80'}`} />
           Cloud Storage
         </button>
         <button
           onClick={() => navigate('/password-manager')}
-          className={`flex items-center gap-3 text-left text-[14px] px-3 py-2.5 rounded-lg transition-all border ${
-            isPasswordManager
+          className={`flex items-center gap-3 text-left text-[14px] px-3 py-2.5 rounded-lg transition-all border ${isPasswordManager
               ? 'bg-indigo-500/15 text-indigo-400 font-medium shadow-inner border-indigo-500/20'
               : 'hover:bg-white/5 hover:text-white text-gray-400 font-medium border-transparent'
-          }`}
+            }`}
         >
           <Key className={`w-5 h-5 ${isPasswordManager ? 'text-indigo-400' : 'text-amber-400/80'}`} />
           Password Manager
         </button>
         <button
           onClick={() => navigate('/connections')}
-          className={`flex items-center gap-3 text-left text-[14px] px-3 py-2.5 rounded-lg transition-all border ${
-            isConnections
+          className={`flex items-center gap-3 text-left text-[14px] px-3 py-2.5 rounded-lg transition-all border ${isConnections
               ? 'bg-indigo-500/15 text-indigo-400 font-medium shadow-inner border-indigo-500/20'
               : 'hover:bg-white/5 hover:text-white text-gray-400 font-medium border-transparent'
-          }`}
+            }`}
         >
           <Link className={`w-5 h-5 ${isConnections ? 'text-indigo-400' : 'text-emerald-400/80'}`} />
           Connections
         </button>
         <button
           onClick={() => navigate('/other')}
-          className={`flex items-center gap-3 text-left text-[14px] px-3 py-2.5 rounded-lg transition-all border ${
-            isOther
+          className={`flex items-center gap-3 text-left text-[14px] px-3 py-2.5 rounded-lg transition-all border ${isOther
               ? 'bg-indigo-500/15 text-indigo-400 font-medium shadow-inner border-indigo-500/20'
               : 'hover:bg-white/5 hover:text-white text-gray-400 font-medium border-transparent'
-          }`}
+            }`}
         >
           <MoreHorizontal className={`w-5 h-5 ${isOther ? 'text-indigo-400' : 'text-gray-400/80'}`} />
           Other

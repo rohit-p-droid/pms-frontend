@@ -1,13 +1,27 @@
 import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useEditor, EditorContent } from '@tiptap/react'
+import { BubbleMenu, FloatingMenu } from '@tiptap/react/menus'
 import StarterKit from '@tiptap/starter-kit'
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
 import { Table } from '@tiptap/extension-table'
 import { TableRow } from '@tiptap/extension-table-row'
 import { TableCell } from '@tiptap/extension-table-cell'
 import { TableHeader } from '@tiptap/extension-table-header'
+import TaskList from '@tiptap/extension-task-list'
+import TaskItem from '@tiptap/extension-task-item'
+import Image from '@tiptap/extension-image'
+import Placeholder from '@tiptap/extension-placeholder'
 import { createLowlight } from 'lowlight'
+import {
+  Bold, Italic, Strikethrough, Code as CodeIcon,
+  List as ListIcon, ListOrdered, CheckSquare, Quote, TerminalSquare,
+  Heading1, Table as TableIcon, Activity, Columns, Rows, Trash,
+  Minus, Image as ImageIcon, AlignLeft, AlignCenter, AlignRight, AlignJustify
+} from 'lucide-react'
+import { ExcalidrawExtension } from './extensions/Excalidraw'
+import { config } from '../../config'
+import axios from 'axios'
 import javascript from 'highlight.js/lib/languages/javascript'
 import typescript from 'highlight.js/lib/languages/typescript'
 import python from 'highlight.js/lib/languages/python'
@@ -15,6 +29,13 @@ import css from 'highlight.js/lib/languages/css'
 import xml from 'highlight.js/lib/languages/xml'
 import bash from 'highlight.js/lib/languages/bash'
 import json from 'highlight.js/lib/languages/json'
+import markdown from 'highlight.js/lib/languages/markdown'
+import sql from 'highlight.js/lib/languages/sql'
+import java from 'highlight.js/lib/languages/java'
+import TextAlign from '@tiptap/extension-text-align'
+import { ReactNodeViewRenderer } from '@tiptap/react'
+import { LineHeight } from './extensions/LineHeight'
+import { CodeBlockComponent } from './extensions/CodeBlockComponent'
 import type { RootState } from '../../store/store'
 import { getDocumentContent } from '../../services/docs.service'
 import { useAutoSave } from '../../hooks/useAutoSave'
@@ -28,6 +49,9 @@ lowlight.register('css', css)
 lowlight.register('html', xml)
 lowlight.register('bash', bash)
 lowlight.register('json', json)
+lowlight.register('markdown', markdown)
+lowlight.register('sql', sql)
+lowlight.register('java', java)
 
 // ── Save status badge ─────────────────────────────────────────────────────────
 const STATUS_LABELS: Record<string, string> = {
@@ -41,11 +65,12 @@ const STATUS_LABELS: Record<string, string> = {
 interface ToolbarBtnProps {
   onClick: () => void
   active?: boolean
-  label: string
+  label?: string
+  icon?: React.ReactNode
   title?: string
 }
 
-function ToolbarBtn({ onClick, active, label, title }: ToolbarBtnProps) {
+function ToolbarBtn({ onClick, active, label, icon, title }: ToolbarBtnProps) {
   return (
     <button
       type="button"
@@ -54,15 +79,28 @@ function ToolbarBtn({ onClick, active, label, title }: ToolbarBtnProps) {
         onClick()
       }}
       title={title ?? label}
-      className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+      className={`p-1.5 flex items-center justify-center text-sm font-medium rounded-md transition-all ${
         active
           ? 'bg-primary-50 text-primary-800 dark:bg-primary-900/40 dark:text-primary-200 shadow-sm'
           : 'text-secondary-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200'
       }`}
     >
-      {label}
+      {icon ? icon : label}
     </button>
   )
+}
+
+// ── Image Upload Helper ───────────────────────────────────────────────────────
+const uploadImage = async (file: File, token: string | null) => {
+  const formData = new FormData()
+  formData.append('image', file)
+  const res = await axios.post(`${config.API_URL}/upload`, formData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'multipart/form-data',
+    },
+  })
+  return res.data?.data?.url
 }
 
 // ── Editor Page ───────────────────────────────────────────────────────────────
@@ -85,23 +123,83 @@ export default function DocumentEditorPage() {
         codeBlock: false,
         heading: { levels: [1, 2, 3] },
       }),
-      CodeBlockLowlight.configure({ lowlight }),
+      CodeBlockLowlight.configure({ lowlight }).extend({
+        addNodeView() {
+          return ReactNodeViewRenderer(CodeBlockComponent)
+        },
+      }),
+      LineHeight.configure({
+        types: ['heading', 'paragraph'],
+      }),
       Table.configure({ resizable: true }),
       TableRow,
       TableCell,
       TableHeader,
+      TaskList,
+      TaskItem.configure({ 
+        nested: true,
+        HTMLAttributes: {
+          class: 'task-item',
+        },
+      }),
+      Image.configure({ inline: true }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
+      Placeholder.configure({
+        placeholder: 'Start writing...',
+      }),
+      ExcalidrawExtension,
     ],
     content: '',
     editorProps: {
       attributes: {
         class:
-          'prose dark:prose-invert max-w-none focus:outline-none min-h-[calc(100vh-300px)]',
+          'prose dark:prose-invert max-w-none focus:outline-none min-h-[calc(100vh-300px)] px-4 sm:px-8',
+      },
+      handlePaste(view, event) {
+        const items = event.clipboardData?.items
+        if (!items) return false
+
+        for (const item of Array.from(items)) {
+          if (item.type.startsWith('image/')) {
+            event.preventDefault()
+            const file = item.getAsFile()
+            if (!file) continue
+
+            // Dispatch a custom event reusing the same upload flow
+            const uploadEvent = new CustomEvent('editor-image-upload', { detail: { file } })
+            window.dispatchEvent(uploadEvent)
+            return true
+          }
+        }
+        return false
       },
     },
     onUpdate: ({ editor }) => {
       triggerSave(editor)
     },
   })
+
+  const token = useSelector((state: RootState) => state.auth.token)
+
+  // Global custom event listener for image uploads from SlashCommand
+  useEffect(() => {
+    const handleImageUpload = async (e: any) => {
+      if (!editor || !e.detail?.file) return
+      try {
+        const url = await uploadImage(e.detail.file, token)
+        if (url) {
+          editor.chain().focus().setImage({ src: url }).run()
+        }
+      } catch (err) {
+        console.error("Image upload failed", err)
+      }
+    }
+
+    window.addEventListener('editor-image-upload', handleImageUpload)
+    return () => window.removeEventListener('editor-image-upload', handleImageUpload)
+  }, [editor, token])
 
   // Sync editable state
   useEffect(() => {
@@ -180,39 +278,51 @@ export default function DocumentEditorPage() {
         {isEditing && (
           <div className="flex items-center gap-1.5 px-4 py-2 border-b border-gray-200 dark:border-[#4b545c] bg-gray-50 dark:bg-[#3a4047] flex-wrap shrink-0">
             {/* Heading controls */}
-            {([1, 2, 3] as const).map((level) => (
-              <ToolbarBtn
-                key={level}
-                label={`H${level}`}
-                title={`Heading ${level}`}
-                active={editor?.isActive('heading', { level }) ?? false}
-                onClick={() => editor?.chain().focus().toggleHeading({ level }).run()}
-              />
-            ))}
+            <select
+              title="Text Content Type"
+              className="px-3 py-1.5 text-sm font-medium rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#2c313a] text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-primary-500 outline-none cursor-pointer min-w-[120px]"
+              value={
+                editor?.isActive('heading', { level: 1 }) ? 'h1' :
+                editor?.isActive('heading', { level: 2 }) ? 'h2' :
+                editor?.isActive('heading', { level: 3 }) ? 'h3' : 'p'
+              }
+              onChange={(e) => {
+                const val = e.target.value
+                if (val === 'p') editor?.chain().focus().setParagraph().run()
+                else if (val === 'h1') editor?.chain().focus().toggleHeading({ level: 1 }).run()
+                else if (val === 'h2') editor?.chain().focus().toggleHeading({ level: 2 }).run()
+                else if (val === 'h3') editor?.chain().focus().toggleHeading({ level: 3 }).run()
+              }}
+            >
+              <option value="p">Paragraph</option>
+              <option value="h1">Heading 1</option>
+              <option value="h2">Heading 2</option>
+              <option value="h3">Heading 3</option>
+            </select>
 
             <span className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1" />
 
             {/* Inline marks */}
             <ToolbarBtn
-              label="B"
+              icon={<Bold size={18} />}
               title="Bold"
               active={editor?.isActive('bold') ?? false}
               onClick={() => editor?.chain().focus().toggleBold().run()}
             />
             <ToolbarBtn
-              label="I"
+              icon={<Italic size={18} />}
               title="Italic"
               active={editor?.isActive('italic') ?? false}
               onClick={() => editor?.chain().focus().toggleItalic().run()}
             />
             <ToolbarBtn
-              label="S"
+              icon={<Strikethrough size={18} />}
               title="Strikethrough"
               active={editor?.isActive('strike') ?? false}
               onClick={() => editor?.chain().focus().toggleStrike().run()}
             />
             <ToolbarBtn
-              label="`"
+              icon={<CodeIcon size={18} />}
               title="Inline code"
               active={editor?.isActive('code') ?? false}
               onClick={() => editor?.chain().focus().toggleCode().run()}
@@ -222,35 +332,69 @@ export default function DocumentEditorPage() {
 
             {/* Lists */}
             <ToolbarBtn
-              label="UL"
+              icon={<ListIcon size={18} />}
               title="Bullet list"
               active={editor?.isActive('bulletList') ?? false}
               onClick={() => editor?.chain().focus().toggleBulletList().run()}
             />
             <ToolbarBtn
-              label="OL"
+              icon={<ListOrdered size={18} />}
               title="Ordered list"
               active={editor?.isActive('orderedList') ?? false}
               onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+            />
+            <ToolbarBtn
+              icon={<CheckSquare size={18} />}
+              title="Task list"
+              active={editor?.isActive('taskList') ?? false}
+              onClick={() => editor?.chain().focus().toggleTaskList().run()}
+            />
+
+            <span className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1" />
+
+            {/* Text Alignment */}
+            <ToolbarBtn
+              icon={<AlignLeft size={18} />}
+              title="Align left"
+              active={editor?.isActive({ textAlign: 'left' }) ?? false}
+              onClick={() => editor?.chain().focus().setTextAlign('left').run()}
+            />
+            <ToolbarBtn
+              icon={<AlignCenter size={18} />}
+              title="Align center"
+              active={editor?.isActive({ textAlign: 'center' }) ?? false}
+              onClick={() => editor?.chain().focus().setTextAlign('center').run()}
+            />
+            <ToolbarBtn
+              icon={<AlignRight size={18} />}
+              title="Align right"
+              active={editor?.isActive({ textAlign: 'right' }) ?? false}
+              onClick={() => editor?.chain().focus().setTextAlign('right').run()}
+            />
+            <ToolbarBtn
+              icon={<AlignJustify size={18} />}
+              title="Justify"
+              active={editor?.isActive({ textAlign: 'justify' }) ?? false}
+              onClick={() => editor?.chain().focus().setTextAlign('justify').run()}
             />
 
             <span className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1" />
 
             {/* Block types */}
             <ToolbarBtn
-              label="Code"
+              icon={<TerminalSquare size={18} />}
               title="Code block"
               active={editor?.isActive('codeBlock') ?? false}
               onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
             />
             <ToolbarBtn
-              label="Quote"
+              icon={<Quote size={18} />}
               title="Blockquote"
               active={editor?.isActive('blockquote') ?? false}
               onClick={() => editor?.chain().focus().toggleBlockquote().run()}
             />
             <ToolbarBtn
-              label="—"
+              icon={<Minus size={18} />}
               title="Horizontal rule"
               onClick={() => editor?.chain().focus().setHorizontalRule().run()}
             />
@@ -259,24 +403,87 @@ export default function DocumentEditorPage() {
 
             {/* Table */}
             <ToolbarBtn
-              label="Table"
+              icon={<TableIcon size={18} />}
               title="Insert table"
               active={editor?.isActive('table') ?? false}
               onClick={() =>
                 editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
               }
             />
+
+             <span className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1" />
+
+             {/* Diagrams */}
+            <ToolbarBtn
+              icon={<ImageIcon size={18} />}
+              title="Upload Image"
+              onClick={() => {
+                const input = document.createElement('input')
+                input.type = 'file'
+                input.accept = 'image/*'
+                input.onchange = async () => {
+                  if (input.files?.length) {
+                    const event = new CustomEvent('editor-image-upload', { detail: { file: input.files[0] } })
+                    window.dispatchEvent(event)
+                  }
+                }
+                input.click()
+              }}
+            />
+            <ToolbarBtn
+              icon={<Activity size={18} />}
+              title="Draw Diagram (Excalidraw)"
+              onClick={() => editor?.chain().focus().insertContent({ type: 'excalidraw' }).run() }
+            />
           </div>
         )}
 
         {/* ── Editor Body ─────────────────────────────────────────────────────── */}
         <div className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
-          {loading ? (
+          {loading || !editor ? (
             <div className="flex items-center justify-center h-full text-sm text-gray-500 dark:text-gray-400">
               Loading...
             </div>
           ) : (
-            <EditorContent editor={editor} />
+            <>
+              {editor && isEditing && (
+                <BubbleMenu 
+                  editor={editor} 
+                  tippyOptions={{ zIndex: 99999, placement: 'top' }}
+                  shouldShow={({ state, editor }) => {
+                    // Show menu if text is selected, or if we're inside a table
+                    return !state.selection.empty || editor.isActive('table')
+                  }}
+                  className="flex items-center gap-1 bg-white dark:bg-[#343a40] shadow-lg border border-gray-200 dark:border-gray-700 rounded-md p-1"
+                >
+                  <ToolbarBtn icon={<Bold size={16} />} title="Bold" active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()} />
+                  <ToolbarBtn icon={<Italic size={16} />} title="Italic" active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()} />
+                  <ToolbarBtn icon={<Strikethrough size={16} />} title="Strike" active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()} />
+                  <span className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1" />
+                  <ToolbarBtn icon={<CodeIcon size={16} />} title="Code" active={editor.isActive('code')} onClick={() => editor.chain().focus().toggleCode().run()} />
+                  {editor.isActive('table') && (
+                    <>
+                      <span className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1" />
+                      <ToolbarBtn icon={<Columns size={16} />} title="Add Column After" onClick={() => editor.chain().focus().addColumnAfter().run()} />
+                      <ToolbarBtn icon={<Rows size={16} />} title="Add Row After" onClick={() => editor.chain().focus().addRowAfter().run()} />
+                      <ToolbarBtn icon={<div className="flex items-center gap-1 text-red-500"><Trash size={16} /><span className="text-[11px] font-semibold uppercase">Col</span></div>} title="Delete Column" onClick={() => editor.chain().focus().deleteColumn().run()} />
+                      <ToolbarBtn icon={<div className="flex items-center gap-1 text-red-500"><Trash size={16} /><span className="text-[11px] font-semibold uppercase">Row</span></div>} title="Delete Row" onClick={() => editor.chain().focus().deleteRow().run()} />
+                    </>
+                  )}
+                </BubbleMenu>
+              )}
+              {editor && isEditing && (
+                <FloatingMenu editor={editor} className="flex gap-1">
+                  <button onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} className="w-6 h-6 flex items-center justify-center rounded-md bg-white border border-gray-200 hover:bg-gray-100 text-gray-600">
+                    <Heading1 size={14} />
+                  </button>
+                  <button onClick={() => editor.chain().focus().toggleBulletList().run()} className="w-6 h-6 flex items-center justify-center rounded-md bg-white border border-gray-200 hover:bg-gray-100 text-gray-600">
+                    <ListIcon size={14} />
+                  </button>
+                </FloatingMenu>
+              )}
+              <EditorContent editor={editor} />
+            </>
           )}
         </div>
       </div>

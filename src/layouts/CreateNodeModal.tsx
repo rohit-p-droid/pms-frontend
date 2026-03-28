@@ -1,17 +1,26 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface Props {
   open: boolean
   parentName: string
   fixedType?: 'FOLDER' | 'DOCUMENT'
+  title?: string
   onClose: () => void
   onConfirm: (name: string, type: 'FOLDER' | 'DOCUMENT', description?: string) => Promise<void>
 }
 
-export default function CreateNodeModal({ open, parentName, fixedType, onClose, onConfirm }: Props) {
+export default function CreateNodeModal({ open, parentName, fixedType, title, onClose, onConfirm }: Props) {
   const [name, setName] = useState('')
   const [type, setType] = useState<'FOLDER' | 'DOCUMENT'>(fixedType || 'DOCUMENT')
   const [loading, setLoading] = useState(false)
+
+  // Reset state when modal opens
+  useEffect(() => {
+    if (open) {
+      setName('')
+      setType(fixedType || 'DOCUMENT')
+    }
+  }, [open, fixedType])
 
   if (!open) return null
 
@@ -39,7 +48,7 @@ export default function CreateNodeModal({ open, parentName, fixedType, onClose, 
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
-          {fixedType ? (fixedType === 'FOLDER' ? 'Create Folder' : 'Create Page') : 'New item'}
+          {title ? title : fixedType ? (fixedType === 'FOLDER' ? 'Create Folder' : 'Create Page') : 'New item'}
         </h3>
         <p className="text-xs text-secondary-500 dark:text-gray-500 mb-4">
           Inside: <span className="font-medium">{parentName}</span>

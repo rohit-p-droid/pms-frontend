@@ -1,0 +1,11 @@
+src/pages/editor/DocumentEditorPage.tsx(160,19): error TS6133: 'view' is declared but its value is never read.
+src/pages/editor/DocumentEditorPage.tsx(452,19): error TS2322: Type '{ children: (false | Element)[]; editor: Editor; tippyOptions: { zIndex: number; placement: string; }; shouldShow: ({ state, editor }: { editor: Editor; element: HTMLElement; ... 4 more ...; to: number; }) => boolean; className: string; }' is not assignable to type 'IntrinsicAttributes & Pick<Partial<Omit<Optional$1<BubbleMenuPluginProps, "pluginKey">, "element">>, "editor"> & Omit<...> & HTMLAttributes<...> & RefAttributes<...>'.
+  Property 'tippyOptions' does not exist on type 'IntrinsicAttributes & Pick<Partial<Omit<Optional$1<BubbleMenuPluginProps, "pluginKey">, "element">>, "editor"> & Omit<...> & HTMLAttributes<...> & RefAttributes<...>'.
+src/pages/editor/extensions/Excalidraw.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
+src/pages/editor/extensions/Excalidraw.tsx(11,35): error TS6133: 'getSceneVersion' is declared but its value is never read.
+src/pages/editor/extensions/Excalidraw.tsx(12,15): error TS2305: Module '"@excalidraw/excalidraw"' has no exported member 'ExcalidrawElement'.
+src/pages/editor/extensions/Excalidraw.tsx(13,15): error TS2305: Module '"@excalidraw/excalidraw"' has no exported member 'AppState'.
+src/pages/editor/extensions/Excalidraw.tsx(13,25): error TS2305: Module '"@excalidraw/excalidraw"' has no exported member 'BinaryFiles'.
+src/pages/editor/extensions/Excalidraw.tsx(54,6): error TS6133: 'newElements' is declared but its value is never read.
+src/pages/editor/extensions/Excalidraw.tsx(54,49): error TS6133: 'newAppState' is declared but its value is never read.
+src/pages/editor/extensions/Excalidraw.tsx(54,72): error TS6133: 'newFiles' is declared but its value is never read.

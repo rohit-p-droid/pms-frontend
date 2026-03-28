@@ -21,6 +21,7 @@ body {
   from {
     @apply opacity-0;
   }
+
   to {
     @apply opacity-100;
   }
@@ -30,17 +31,22 @@ body {
   from {
     @apply translate-y-2.5 opacity-0;
   }
+
   to {
     @apply translate-y-0 opacity-100;
   }
 }
 
 /* Form styling */
-input, textarea, select {
+input,
+textarea,
+select {
   @apply transition-colors;
 }
 
-input:focus, textarea:focus, select:focus {
+input:focus,
+textarea:focus,
+select:focus {
   @apply outline-none ring-2 ring-primary-500;
 }
 
@@ -68,20 +74,24 @@ h1 {
   font-size: 56px;
   letter-spacing: -1.68px;
   margin: 32px 0;
+
   @media (max-width: 1024px) {
     font-size: 36px;
     margin: 20px 0;
   }
 }
+
 h2 {
   font-size: 24px;
   line-height: 118%;
   letter-spacing: -0.24px;
   margin: 0 0 8px;
+
   @media (max-width: 1024px) {
     font-size: 20px;
   }
 }
+
 p {
   margin: 0;
 }
@@ -105,21 +115,50 @@ code {
 
 .ProseMirror {
   outline: none;
+  color: #111827;
 }
 
-.ProseMirror > * + * {
-  margin-top: 0.75em;
+.dark .ProseMirror {
+  color: #f3f4f6;
+}
+
+.ProseMirror>*+* {
+  margin-top: 0;
+}
+
+.ProseMirror p {
+  margin-top: 0;
+  margin-bottom: 0;
+  line-height: 1.3;
+}
+
+.ProseMirror ul li,
+.ProseMirror ol li,
+ul[data-type="taskList"] li {
+  line-height: 1;
+}
+
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3 {
+  line-height: 2;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 /* Code blocks */
 .ProseMirror pre {
-  background: #1e1e2e;
+  background: #f4f4f5;
   border-radius: 6px;
-  color: #cdd6f4;
+  color: #1f2937;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 13px;
   padding: 1rem 1.25rem;
   overflow-x: auto;
+  white-space: pre;
+  /* Prevent wrapping to align correctly */
+  word-wrap: normal;
+  word-break: normal;
 }
 
 .ProseMirror pre code {
@@ -135,6 +174,24 @@ code {
   border-radius: 3px;
   font-size: 0.9em;
   padding: 2px 5px;
+}
+
+.dark .ProseMirror pre {
+  background: #1e1e2e;
+  color: #cdd6f4;
+}
+
+.dark .ProseMirror code {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.dark .ProseMirror pre code {
+  background: none;
+}
+
+.prose code::before,
+.prose code::after {
+  content: none !important;
 }
 
 /* Blockquote */
@@ -178,6 +235,22 @@ code {
   background-color: #1f2937;
 }
 
+.ProseMirror .selectedCell:after {
+  z-index: 2;
+  position: absolute;
+  content: "";
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 123, 255, 0.15);
+  pointer-events: none;
+}
+
+.dark .ProseMirror .selectedCell:after {
+  background: rgba(100, 150, 255, 0.3);
+}
+
 /* Horizontal rule */
 .ProseMirror hr {
   border: none;
@@ -189,7 +262,7 @@ code {
   border-color: #374151;
 }
 
-/* Syntax highlighting (lowlight) */
+/* Syntax highlighting (Light) */
 .hljs-comment,
 .hljs-quote {
   color: #6b7280;
@@ -197,25 +270,113 @@ code {
 }
 .hljs-keyword,
 .hljs-selector-tag {
-  color: #c084fc;
+  color: #d946ef;
 }
 .hljs-string,
 .hljs-attr {
-  color: #86efac;
+  color: #16a34a;
 }
 .hljs-number,
 .hljs-literal {
-  color: #fdba74;
+  color: #ea580c;
 }
 .hljs-built_in,
 .hljs-type {
-  color: #7dd3fc;
+  color: #0284c7;
 }
 .hljs-function,
 .hljs-title {
-  color: #fde68a;
+  color: #d97706;
 }
 .hljs-variable,
 .hljs-name {
+  color: #111827;
+}
+
+/* Syntax highlighting (Dark) */
+.dark .hljs-comment,
+.dark .hljs-quote {
+  color: #9ca3af;
+  font-style: italic;
+}
+.dark .hljs-keyword,
+.dark .hljs-selector-tag {
+  color: #c084fc;
+}
+.dark .hljs-string,
+.dark .hljs-attr {
+  color: #86efac;
+}
+.dark .hljs-number,
+.dark .hljs-literal {
+  color: #fdba74;
+}
+.dark .hljs-built_in,
+.dark .hljs-type {
+  color: #7dd3fc;
+}
+.dark .hljs-function,
+.dark .hljs-title {
+  color: #fde68a;
+}
+.dark .hljs-variable,
+.dark .hljs-name {
   color: #f9fafb;
+}
+
+/* Placeholder */
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: #9ca3af;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Task lists */
+ul[data-type="taskList"] {
+  list-style: none;
+  padding: 0;
+}
+
+ul[data-type="taskList"] p {
+  margin: 0;
+}
+
+ul[data-type="taskList"] li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.25rem;
+  gap: 0.5rem;
+}
+
+ul[data-type="taskList"] li>label {
+  flex: 0 0 auto;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+
+ul[data-type="taskList"] li>label input[type="checkbox"] {
+  display: block;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  accent-color: #007bff;
+  flex-shrink: 0;
+}
+
+ul[data-type="taskList"] li>div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Image */
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
 }
