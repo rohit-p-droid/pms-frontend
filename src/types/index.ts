@@ -17,6 +17,7 @@ export interface User {
   isActive: boolean
   createdAt: string
   updatedAt: string
+  encryptedSecretKey?: string | null
 }
 
 export interface AuthResponse {

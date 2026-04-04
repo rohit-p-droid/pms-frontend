@@ -19,7 +19,7 @@ import {
   Heading1, Table as TableIcon, Activity, Columns, Rows, Trash,
   Minus, Image as ImageIcon, AlignLeft, AlignCenter, AlignRight, AlignJustify
 } from 'lucide-react'
-import { ExcalidrawExtension } from './extensions/Excalidraw'
+import { DrawIOExtension } from './extensions/DrawIO'
 import { config } from '../../config'
 import axios from 'axios'
 import javascript from 'highlight.js/lib/languages/javascript'
@@ -149,7 +149,7 @@ export default function DocumentEditorPage() {
       Placeholder.configure({
         placeholder: 'Start writing...',
       }),
-      ExcalidrawExtension,
+      DrawIOExtension,
     ],
     content: '',
     editorProps: {
@@ -432,8 +432,8 @@ export default function DocumentEditorPage() {
             />
             <ToolbarBtn
               icon={<Activity size={18} />}
-              title="Draw Diagram (Excalidraw)"
-              onClick={() => editor?.chain().focus().insertContent({ type: 'excalidraw' }).run() }
+              title="Draw Diagram (Draw.io)"
+              onClick={() => editor?.chain().focus().insertContent({ type: 'drawio' }).run() }
             />
           </div>
         )}

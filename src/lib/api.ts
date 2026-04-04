@@ -54,8 +54,57 @@ class ApiClient {
     }
 
     async getMe(): Promise<ApiResponse> {
-        const response = await this.client.get<ApiResponse>('/auth/me')
-        return response.data
+        const response = await this.client.get<ApiResponse>('/auth/me');
+        return response.data;
+    }
+
+    async verifyPassword(password: string): Promise<boolean> {
+        try {
+            await this.client.post('/auth/verify-password', { password });
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    async updateSecretKey(encryptedSecretKey: string): Promise<ApiResponse> {
+        const response = await this.client.patch<ApiResponse>('/auth/secret-key', { encryptedSecretKey });
+        return response.data;
+    }
+
+    async changePassword(data: { oldPassword: string, newPassword: string, newEncryptedSecretKey?: string }): Promise<ApiResponse> {
+        const response = await this.client.patch<ApiResponse>('/auth/change-password', data);
+        return response.data;
+    }
+
+    // --- Passwords ---
+
+    async getPasswordFolders(): Promise<import('../types/password').PasswordFolder[]> {
+        const response = await this.client.get('/passwords/folders');
+        return response.data.data;
+    }
+
+    async createPasswordFolder(payload: import('../types/password').CreateFolderPayload): Promise<import('../types/password').PasswordFolder> {
+        const response = await this.client.post('/passwords/folders', payload);
+        return response.data.data;
+    }
+
+    async deletePasswordFolder(id: string): Promise<void> {
+        await this.client.delete(`/passwords/folders/${id}`);
+    }
+
+    async createPasswordCredential(payload: import('../types/password').CreateCredentialPayload): Promise<import('../types/password').PasswordCredential> {
+        const response = await this.client.post('/passwords/credentials', payload);
+        return response.data.data;
+    }
+
+    async updatePasswordCredential(id: string, payload: import('../types/password').UpdateCredentialPayload): Promise<import('../types/password').PasswordCredential> {
+        const response = await this.client.put(`/passwords/credentials/${id}`, payload);
+        return response.data.data;
+    }
+
+    async deletePasswordCredential(id: string): Promise<void> {
+        await this.client.delete(`/passwords/credentials/${id}`);
     }
 }
 

@@ -46,6 +46,7 @@ export default function Header({ breadcrumb }: Props) {
   if (location.pathname.startsWith('/dashboard')) crumbs = [{ label: 'Dashboard' }]
   else if (location.pathname.startsWith('/cloud-storage')) crumbs = [{ label: 'Cloud Storage' }]
   else if (location.pathname.startsWith('/password-manager')) crumbs = [{ label: 'Password Manager' }]
+  else if (location.pathname.startsWith('/settings')) crumbs = [{ label: 'Account Settings' }]
   else if (location.pathname.startsWith('/connections')) crumbs = [{ label: 'Connections' }]
   else if (location.pathname.startsWith('/other')) crumbs = [{ label: 'Other Features' }]
   else if (!isWorkspaceList && breadcrumb.length > 0) crumbs = breadcrumb
@@ -114,10 +115,13 @@ export default function Header({ breadcrumb }: Props) {
 
                 <button
                   className="flex items-center gap-3 text-sm font-medium text-left px-5 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-                  onClick={() => setIsProfileOpen(false)}
+                  onClick={() => {
+                    setIsProfileOpen(false)
+                    navigate('/settings')
+                  }}
                 >
                   <Settings className="w-4 h-4 text-gray-400 dark:text-gray-400" />
-                  Profile settings
+                  Account Settings
                 </button>
                 
                 <button

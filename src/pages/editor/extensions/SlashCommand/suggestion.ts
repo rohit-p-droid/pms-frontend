@@ -11,7 +11,7 @@ import {
   Quote,
   Code,
   Image as ImageIcon,
-  Activity,
+  PenTool,
   Box,
 } from 'lucide-react'
 import React from 'react'
@@ -93,11 +93,11 @@ export const suggestion = {
         },
       },
       {
-        title: 'Diagram (Excalidraw)',
-        description: 'Insert an interactive canvas.',
-        icon: React.createElement(Activity, { size: 18 }),
+        title: 'Diagram (Draw.io)',
+        description: 'Insert a professional diagram.',
+        icon: React.createElement(PenTool, { size: 18 }),
         command: ({ editor, range }: any) => {
-          editor.chain().focus().deleteRange(range).insertContent({ type: 'excalidraw' }).run()
+          editor.chain().focus().deleteRange(range).insertContent({ type: 'drawio' }).run()
         },
       },
       {

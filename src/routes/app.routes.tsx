@@ -6,6 +6,8 @@ import DashboardPage from '../pages/dashboard/DashboardPage'
 import DocumentEditorPage from '../pages/editor/DocumentEditorPage'
 import WorkspaceListPage from '../pages/workspace/WorkspaceListPage'
 import ComingSoonPage from '../pages/coming-soon/ComingSoonPage'
+import PasswordManagerPage from '../pages/password-manager/PasswordManagerPage'
+import AccountSettingsPage from '../pages/settings/AccountSettingsPage'
 
 export const appRoutes: RouteObject[] = [
   {
@@ -43,7 +45,11 @@ export const appRoutes: RouteObject[] = [
       },
       {
         path: 'password-manager',
-        element: <ComingSoonPage title="Password Manager" />,
+        element: <PasswordManagerPage />,
+      },
+      {
+        path: 'settings',
+        element: <AccountSettingsPage />,
       },
       {
         path: 'connections',
